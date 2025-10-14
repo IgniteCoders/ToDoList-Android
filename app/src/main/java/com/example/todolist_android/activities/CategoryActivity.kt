@@ -15,6 +15,7 @@ class CategoryActivity : AppCompatActivity() {
     lateinit var binding: ActivityCategoryBinding
 
     lateinit var categoryDAO: CategoryDAO
+    lateinit var category: Category
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -29,14 +30,30 @@ class CategoryActivity : AppCompatActivity() {
             insets
         }
 
+        val id = intent.getIntExtra("CATEGORY_ID", -1)
+
         categoryDAO = CategoryDAO(this)
+
+        if (id != -1) {
+            // Edit
+            category = categoryDAO.find(id)!!
+        } else {
+            // Crear
+            category = Category(-1, "")
+        }
+
+        binding.nameEditText.editText?.setText(category.name)
 
         binding.saveButton.setOnClickListener {
             val name = binding.nameEditText.editText?.text.toString()
 
-            val category = Category(-1, name)
+            category.name = name
 
-            categoryDAO.insert(category)
+            if (category.id == -1) {
+                categoryDAO.insert(category)
+            } else {
+                categoryDAO.update(category)
+            }
 
             finish()
         }

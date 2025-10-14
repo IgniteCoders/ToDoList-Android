@@ -8,7 +8,9 @@ import com.example.todolist_android.databinding.ItemCategoryBinding
 
 class CategoryAdapter(
     var items: List<Category>,
-    val onClickListener: (Int) -> Unit
+    val onClickListener: (Int) -> Unit,
+    val onEditListener: (Int) -> Unit,
+    val onDeleteListener: (Int) -> Unit
 ) : RecyclerView.Adapter<CategoryViewHolder>() {
 
     // Cual es la vista para los elementos
@@ -24,6 +26,12 @@ class CategoryAdapter(
         holder.render(item)
         holder.itemView.setOnClickListener {
             onClickListener(position)
+        }
+        holder.binding.editButton.setOnClickListener {
+            onEditListener(position)
+        }
+        holder.binding.deleteButton.setOnClickListener {
+            onDeleteListener(position)
         }
     }
 

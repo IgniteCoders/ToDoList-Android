@@ -3,7 +3,9 @@ package com.example.todolist_android.activities
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
@@ -13,6 +15,7 @@ import com.example.todolist_android.adapters.CategoryAdapter
 import com.example.todolist_android.data.Category
 import com.example.todolist_android.data.CategoryDAO
 import com.example.todolist_android.databinding.ActivityMainBinding
+import com.google.android.material.snackbar.Snackbar
 
 class MainActivity : AppCompatActivity() {
 
@@ -38,9 +41,33 @@ class MainActivity : AppCompatActivity() {
 
         categoryDAO = CategoryDAO(this)
 
-        adapter = CategoryAdapter(categoryList) {
+        adapter = CategoryAdapter(categoryList, { position ->
+            // Click
+        }, { position ->
+            // Edit
+            val category = categoryList[position]
+            val intent = Intent(this, CategoryActivity::class.java)
+            intent.putExtra("CATEGORY_ID", category.id)
+            startActivity(intent)
+        }, { position ->
+            // Delete
+            val category = categoryList[position]
 
-        }
+            val dialog = AlertDialog.Builder(this)
+                .setTitle("Borrar categoria")
+                .setMessage("¿Está usted seguro de que quiere borrar la categoría: ${category.name}?")
+                .setPositiveButton("Si") { dialog, which ->
+                    categoryDAO.delete(category.id)
+                    loadData()
+                    Snackbar.make(binding.root, "Categoría borrada correctamente", Snackbar.LENGTH_SHORT).show()
+                    //Toast.makeText(this, "Categoría borrada correctamente", Toast.LENGTH_SHORT).show()
+                }
+                .setNegativeButton("No", null)
+                .create()
+
+            dialog.show()
+
+        })
 
         binding.recyclerView.adapter = adapter
         binding.recyclerView.layoutManager = LinearLayoutManager(this)
@@ -55,6 +82,10 @@ class MainActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
 
+        loadData()
+    }
+
+    fun loadData() {
         categoryList = categoryDAO.findAll()
         adapter.updateItems(categoryList)
     }
