@@ -83,6 +83,8 @@ class CategoryDAO(val context: Context) {
         val sortOrder = null
 
         try {
+            open()
+
             val cursor = db.query(
                 Category.TABLE_NAME,   // The table to query
                 projection,             // The array of columns to return (pass null to get all)
@@ -123,6 +125,8 @@ class CategoryDAO(val context: Context) {
         val sortOrder = null
 
         try {
+            open()
+
             val cursor = db.query(
                 Category.TABLE_NAME,   // The table to query
                 projection,             // The array of columns to return (pass null to get all)
