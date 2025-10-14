@@ -1,36 +1,61 @@
 package com.example.todolist_android.activities
 
+import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.todolist_android.R
+import com.example.todolist_android.adapters.CategoryAdapter
 import com.example.todolist_android.data.Category
 import com.example.todolist_android.data.CategoryDAO
+import com.example.todolist_android.databinding.ActivityMainBinding
 
 class MainActivity : AppCompatActivity() {
+
+    lateinit var binding: ActivityMainBinding
+
+    lateinit var adapter: CategoryAdapter
+    var categoryList: List<Category> = emptyList()
+
+    lateinit var categoryDAO: CategoryDAO
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        setContentView(R.layout.activity_main)
+
+        binding = ActivityMainBinding.inflate(layoutInflater)
+        setContentView(binding.root)
+
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
             insets
         }
 
-        val categoryDAO = CategoryDAO(this)
+        categoryDAO = CategoryDAO(this)
 
-        val category1 = Category(-1, "Compra")
-        val category2 = Category(-1, "Recordatorios")
+        adapter = CategoryAdapter(categoryList) {
 
-        categoryDAO.insert(category1)
-        categoryDAO.insert(category2)
+        }
 
-        val categories = categoryDAO.findAll()
+        binding.recyclerView.adapter = adapter
+        binding.recyclerView.layoutManager = LinearLayoutManager(this)
 
-        Log.i("DATABASE", categories.toString())
+
+        binding.createButton.setOnClickListener {
+            val intent = Intent(this, CategoryActivity::class.java)
+            startActivity(intent)
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+
+        categoryList = categoryDAO.findAll()
+        adapter.updateItems(categoryList)
     }
 }
