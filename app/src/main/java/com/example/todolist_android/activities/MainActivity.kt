@@ -39,10 +39,16 @@ class MainActivity : AppCompatActivity() {
             insets
         }
 
+        supportActionBar?.title = "Mis categorias"
+
         categoryDAO = CategoryDAO(this)
 
         adapter = CategoryAdapter(categoryList, { position ->
             // Click
+            val category = categoryList[position]
+            val intent = Intent(this, TaskListActivity::class.java)
+            intent.putExtra("CATEGORY_ID", category.id)
+            startActivity(intent)
         }, { position ->
             // Edit
             val category = categoryList[position]

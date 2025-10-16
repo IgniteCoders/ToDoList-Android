@@ -74,7 +74,11 @@ class TaskDAO(val context: Context) {
         }
     }
 
-    fun delete(id: Int) {
+    fun delete(task: Task) {
+        delete(task.id)
+    }
+
+    private fun delete(id: Int) {
         try {
             open()
 

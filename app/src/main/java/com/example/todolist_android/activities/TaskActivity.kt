@@ -9,20 +9,26 @@ import androidx.core.view.WindowInsetsCompat
 import com.example.todolist_android.R
 import com.example.todolist_android.data.Category
 import com.example.todolist_android.data.CategoryDAO
-import com.example.todolist_android.databinding.ActivityCategoryBinding
+import com.example.todolist_android.data.Task
+import com.example.todolist_android.data.TaskDAO
+import com.example.todolist_android.databinding.ActivityTaskBinding
 
-class CategoryActivity : AppCompatActivity() {
+class TaskActivity : AppCompatActivity() {
 
-    lateinit var binding: ActivityCategoryBinding
+    lateinit var binding: ActivityTaskBinding
 
+
+    lateinit var taskDAO: TaskDAO
     lateinit var categoryDAO: CategoryDAO
+
+    lateinit var task: Task
     lateinit var category: Category
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
-        binding = ActivityCategoryBinding.inflate(layoutInflater)
+        binding = ActivityTaskBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
@@ -30,35 +36,39 @@ class CategoryActivity : AppCompatActivity() {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
             insets
         }
-        supportActionBar?.setHomeAsUpIndicator(R.drawable.ic_close)
 
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
+        supportActionBar?.setHomeAsUpIndicator(R.drawable.ic_close)
 
-        val id = intent.getIntExtra("CATEGORY_ID", -1)
+        val categoryId = intent.getIntExtra("CATEGORY_ID", -1)
+        val id = intent.getIntExtra("TASK_ID", -1)
 
         categoryDAO = CategoryDAO(this)
+        taskDAO = TaskDAO(this)
+
+        category = categoryDAO.find(categoryId)!!
 
         if (id != -1) {
             // Edit
-            category = categoryDAO.find(id)!!
-            supportActionBar?.title = "Editar categoría"
+            task = taskDAO.find(id)!!
+            supportActionBar?.title = "Editar tarea"
         } else {
             // Crear
-            category = Category(-1, "")
-            supportActionBar?.title = "Crear categoría"
+            task = Task(-1, "", false, category)
+            supportActionBar?.title = "Crear tarea"
         }
 
-        binding.nameEditText.editText?.setText(category.name)
+        binding.titleEditText.editText?.setText(task.title)
 
         binding.saveButton.setOnClickListener {
-            val name = binding.nameEditText.editText?.text.toString()
+            val title = binding.titleEditText.editText?.text.toString()
 
-            category.name = name
+            task.title = title
 
-            if (category.id == -1) {
-                categoryDAO.insert(category)
+            if (task.id == -1) {
+                taskDAO.insert(task)
             } else {
-                categoryDAO.update(category)
+                taskDAO.update(task)
             }
 
             finish()

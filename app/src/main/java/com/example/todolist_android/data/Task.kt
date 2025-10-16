@@ -2,8 +2,8 @@ package com.example.todolist_android.data
 
 data class Task(
     val id: Int,
-    val title: String,
-    val done: Boolean,
+    var title: String,
+    var done: Boolean,
     val category: Category
 ) {
     companion object {
