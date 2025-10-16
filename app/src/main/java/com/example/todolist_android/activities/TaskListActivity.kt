@@ -8,8 +8,10 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.recyclerview.widget.ConcatAdapter
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.todolist_android.R
+import com.example.todolist_android.adapters.HeaderAdapter
 import com.example.todolist_android.adapters.TaskAdapter
 import com.example.todolist_android.data.Category
 import com.example.todolist_android.data.CategoryDAO
@@ -22,8 +24,12 @@ class TaskListActivity : AppCompatActivity() {
 
     lateinit var binding: ActivityTaskListBinding
 
-    lateinit var adapter: TaskAdapter
-    var taskList: List<Task> = emptyList()
+    lateinit var taskDoneAdapter: TaskAdapter
+    lateinit var taskToDoAdapter: TaskAdapter
+    lateinit var doneHeaderAdapter: HeaderAdapter
+    lateinit var toDoHeaderAdapter: HeaderAdapter
+    var taskDoneList: List<Task> = emptyList()
+    var taskToDoList: List<Task> = emptyList()
 
     lateinit var category: Category
 
@@ -53,22 +59,22 @@ class TaskListActivity : AppCompatActivity() {
         supportActionBar?.title = category.name
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
-        adapter = TaskAdapter(taskList, { position ->
+        taskDoneAdapter = TaskAdapter(taskDoneList, { position ->
             // Click
-            val task = taskList[position]
+            val task = taskDoneList[position]
             val intent = Intent(this, TaskActivity::class.java)
             intent.putExtra("CATEGORY_ID", category.id)
             intent.putExtra("TASK_ID", task.id)
             startActivity(intent)
         }, { position ->
             // Check
-            val task = taskList[position]
+            val task = taskDoneList[position]
             task.done = !task.done
             taskDAO.update(task)
             loadData()
         }, { position ->
             // Delete
-            val task = taskList[position]
+            val task = taskDoneList[position]
 
             val dialog = AlertDialog.Builder(this)
                 .setTitle("Borrar tarea")
@@ -86,7 +92,43 @@ class TaskListActivity : AppCompatActivity() {
 
         })
 
-        binding.recyclerView.adapter = adapter
+        taskToDoAdapter = TaskAdapter(taskToDoList, { position ->
+            // Click
+            val task = taskToDoList[position]
+            val intent = Intent(this, TaskActivity::class.java)
+            intent.putExtra("CATEGORY_ID", category.id)
+            intent.putExtra("TASK_ID", task.id)
+            startActivity(intent)
+        }, { position ->
+            // Check
+            val task = taskToDoList[position]
+            task.done = !task.done
+            taskDAO.update(task)
+            loadData()
+        }, { position ->
+            // Delete
+            val task = taskToDoList[position]
+
+            val dialog = AlertDialog.Builder(this)
+                .setTitle("Borrar tarea")
+                .setMessage("¿Está usted seguro de que quiere borrar la tarea: ${task.title}?")
+                .setPositiveButton("Si") { dialog, which ->
+                    taskDAO.delete(task)
+                    loadData()
+                    Snackbar.make(binding.root, "Tarea borrada correctamente", Snackbar.LENGTH_SHORT).show()
+                    //Toast.makeText(this, "Tarea borrada correctamente", Toast.LENGTH_SHORT).show()
+                }
+                .setNegativeButton("No", null)
+                .create()
+
+            dialog.show()
+
+        })
+
+        toDoHeaderAdapter = HeaderAdapter("Tareas pendientes")
+        doneHeaderAdapter = HeaderAdapter("Tareas completadas")
+
+        binding.recyclerView.adapter = ConcatAdapter(toDoHeaderAdapter, taskToDoAdapter, doneHeaderAdapter, taskDoneAdapter)
         binding.recyclerView.layoutManager = LinearLayoutManager(this)
 
         binding.createButton.setOnClickListener {
@@ -113,7 +155,9 @@ class TaskListActivity : AppCompatActivity() {
     }
 
     fun loadData() {
-        taskList = taskDAO.findAllByCategory(category)
-        adapter.updateItems(taskList)
+        taskDoneList = taskDAO.findAllByCategoryAndDone(category, true)
+        taskToDoList = taskDAO.findAllByCategoryAndDone(category, false)
+        taskDoneAdapter.updateItems(taskDoneList)
+        taskToDoAdapter.updateItems(taskToDoList)
     }
 }

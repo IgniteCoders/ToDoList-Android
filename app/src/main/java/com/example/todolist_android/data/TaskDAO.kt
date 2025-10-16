@@ -132,48 +132,19 @@ class TaskDAO(val context: Context) {
         return task
     }
 
-    fun findAll() : List<Task> {
-        val items: MutableList<Task> = mutableListOf()
-
-        // Define a projection that specifies which columns from the database
-        // you will actually use after this query.
-        val projection = null //arrayOf(Task.COLUMN_ID, Task.COLUMN_NAME)
-
-        // Filter results WHERE "title" = 'My Title'
-        val selection = null
-        val selectionArgs = null
-
-        // How you want the results sorted in the resulting Cursor
-        val sortOrder = null
-
-        try {
-            open()
-
-            val cursor = db.query(
-                Task.TABLE_NAME,   // The table to query
-                projection,             // The array of columns to return (pass null to get all)
-                selection,              // The columns for the WHERE clause
-                selectionArgs,          // The values for the WHERE clause
-                null,                   // don't group the rows
-                null,                   // don't filter by row groups
-                sortOrder               // The sort order
-            )
-
-            // Read the cursor data
-            while (cursor.moveToNext()) {
-                val task = readFromCursor(cursor)
-                items.add(task)
-            }
-        } catch (e: Exception) {
-            e.printStackTrace()
-        } finally {
-            close()
-        }
-
-        return items
+    fun findAll(): List<Task> {
+        return findAllBy(null)
     }
 
-    fun findAllByCategory(category: Category) : List<Task> {
+    fun findAllByCategory(category: Category): List<Task> {
+        return findAllBy("${Task.COLUMN_CATEGORY} = ${category.id}")
+    }
+
+    fun findAllByCategoryAndDone(category: Category, done: Boolean): List<Task> {
+        return findAllBy("${Task.COLUMN_CATEGORY} = ${category.id} AND ${Task.COLUMN_DONE} = $done")
+    }
+
+    fun findAllBy(where: String?) : List<Task> {
         val items: MutableList<Task> = mutableListOf()
 
         // Define a projection that specifies which columns from the database
@@ -181,7 +152,7 @@ class TaskDAO(val context: Context) {
         val projection = null //arrayOf(Task.COLUMN_ID, Task.COLUMN_NAME)
 
         // Filter results WHERE "title" = 'My Title'
-        val selection = "${Task.COLUMN_CATEGORY} = ${category.id}"
+        //val selection = null
         val selectionArgs = null
 
         // How you want the results sorted in the resulting Cursor
@@ -193,7 +164,7 @@ class TaskDAO(val context: Context) {
             val cursor = db.query(
                 Task.TABLE_NAME,   // The table to query
                 projection,             // The array of columns to return (pass null to get all)
-                selection,              // The columns for the WHERE clause
+                where,              // The columns for the WHERE clause
                 selectionArgs,          // The values for the WHERE clause
                 null,                   // don't group the rows
                 null,                   // don't filter by row groups

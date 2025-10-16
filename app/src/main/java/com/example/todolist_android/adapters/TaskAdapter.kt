@@ -28,7 +28,9 @@ class TaskAdapter(
             onClickListener(position)
         }
         holder.binding.doneCheckBox.setOnCheckedChangeListener { _, _ ->
-            onCheckListener(position)
+            if(holder.binding.doneCheckBox.isPressed) {
+                onCheckListener(position)
+            }
         }
         holder.binding.deleteButton.setOnClickListener {
             onDeleteListener(position)
