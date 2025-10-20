@@ -9,10 +9,13 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.recyclerview.widget.ConcatAdapter
+import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.example.todolist_android.R
 import com.example.todolist_android.adapters.HeaderAdapter
 import com.example.todolist_android.adapters.TaskAdapter
+import com.example.todolist_android.adapters.TaskViewHolder
 import com.example.todolist_android.data.Category
 import com.example.todolist_android.data.CategoryDAO
 import com.example.todolist_android.data.Task
@@ -62,67 +65,29 @@ class TaskListActivity : AppCompatActivity() {
         taskDoneAdapter = TaskAdapter(taskDoneList, { position ->
             // Click
             val task = taskDoneList[position]
-            val intent = Intent(this, TaskActivity::class.java)
-            intent.putExtra("CATEGORY_ID", category.id)
-            intent.putExtra("TASK_ID", task.id)
-            startActivity(intent)
+            onItemClick(task)
         }, { position ->
             // Check
             val task = taskDoneList[position]
-            task.done = !task.done
-            taskDAO.update(task)
-            loadData()
+            onItemCheck(task)
         }, { position ->
             // Delete
             val task = taskDoneList[position]
-
-            val dialog = AlertDialog.Builder(this)
-                .setTitle("Borrar tarea")
-                .setMessage("¿Está usted seguro de que quiere borrar la tarea: ${task.title}?")
-                .setPositiveButton("Si") { dialog, which ->
-                    taskDAO.delete(task)
-                    loadData()
-                    Snackbar.make(binding.root, "Tarea borrada correctamente", Snackbar.LENGTH_SHORT).show()
-                    //Toast.makeText(this, "Tarea borrada correctamente", Toast.LENGTH_SHORT).show()
-                }
-                .setNegativeButton("No", null)
-                .create()
-
-            dialog.show()
-
+            onItemDelete(task)
         })
 
         taskToDoAdapter = TaskAdapter(taskToDoList, { position ->
             // Click
             val task = taskToDoList[position]
-            val intent = Intent(this, TaskActivity::class.java)
-            intent.putExtra("CATEGORY_ID", category.id)
-            intent.putExtra("TASK_ID", task.id)
-            startActivity(intent)
+            onItemClick(task)
         }, { position ->
             // Check
             val task = taskToDoList[position]
-            task.done = !task.done
-            taskDAO.update(task)
-            loadData()
+            onItemCheck(task)
         }, { position ->
             // Delete
             val task = taskToDoList[position]
-
-            val dialog = AlertDialog.Builder(this)
-                .setTitle("Borrar tarea")
-                .setMessage("¿Está usted seguro de que quiere borrar la tarea: ${task.title}?")
-                .setPositiveButton("Si") { dialog, which ->
-                    taskDAO.delete(task)
-                    loadData()
-                    Snackbar.make(binding.root, "Tarea borrada correctamente", Snackbar.LENGTH_SHORT).show()
-                    //Toast.makeText(this, "Tarea borrada correctamente", Toast.LENGTH_SHORT).show()
-                }
-                .setNegativeButton("No", null)
-                .create()
-
-            dialog.show()
-
+            onItemDelete(task)
         })
 
         toDoHeaderAdapter = HeaderAdapter("Tareas pendientes")
@@ -136,6 +101,8 @@ class TaskListActivity : AppCompatActivity() {
             intent.putExtra("CATEGORY_ID", category.id)
             startActivity(intent)
         }
+
+        configureGestures()
     }
 
     override fun onResume() {
@@ -154,10 +121,70 @@ class TaskListActivity : AppCompatActivity() {
         }
     }
 
+    fun onItemClick(task: Task) {
+        val intent = Intent(this, TaskActivity::class.java)
+        intent.putExtra("CATEGORY_ID", category.id)
+        intent.putExtra("TASK_ID", task.id)
+        startActivity(intent)
+    }
+
+    fun onItemCheck(task: Task) {
+        task.done = !task.done
+        taskDAO.update(task)
+        loadData()
+    }
+
+    fun onItemDelete(task: Task) {
+        val dialog = AlertDialog.Builder(this)
+            .setTitle("Borrar tarea")
+            .setMessage("¿Está usted seguro de que quiere borrar la tarea: ${task.title}?")
+            .setPositiveButton("Si") { dialog, which ->
+                taskDAO.delete(task)
+                loadData()
+                Snackbar.make(binding.root, "Tarea borrada correctamente", Snackbar.LENGTH_SHORT).show()
+                //Toast.makeText(this, "Tarea borrada correctamente", Toast.LENGTH_SHORT).show()
+            }
+            .setNegativeButton("No", null)
+            .create()
+
+        dialog.show()
+    }
+
     fun loadData() {
         taskDoneList = taskDAO.findAllByCategoryAndDone(category, true)
         taskToDoList = taskDAO.findAllByCategoryAndDone(category, false)
         taskDoneAdapter.updateItems(taskDoneList)
         taskToDoAdapter.updateItems(taskToDoList)
+    }
+
+    private fun configureGestures() {
+        val gestures = ItemTouchHelper(
+            object : ItemTouchHelper.SimpleCallback(ItemTouchHelper.UP or ItemTouchHelper.DOWN, ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT) {
+                override fun onMove(
+                    recyclerView: RecyclerView,
+                    viewHolder: RecyclerView.ViewHolder,
+                    target: RecyclerView.ViewHolder
+                ): Boolean {
+                    //recyclerView.adapter?.notifyItemMoved(viewHolder.absoluteAdapterPosition, target.absoluteAdapterPosition)
+                    return false
+                }
+
+                // No se reordenaran las tareas por ahora
+                override fun isLongPressDragEnabled(): Boolean {
+                    return false
+                }
+
+                override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
+                    val task = (viewHolder as TaskViewHolder).task
+
+                    if (direction == ItemTouchHelper.LEFT) {
+                        onItemDelete(task)
+                        binding.recyclerView.adapter?.notifyItemChanged(viewHolder.absoluteAdapterPosition)
+                    } else {
+                        onItemCheck(task)
+                    }
+                }
+            })
+        gestures.attachToRecyclerView(binding.recyclerView)
     }
 }

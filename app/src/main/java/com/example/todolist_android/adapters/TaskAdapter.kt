@@ -54,7 +54,10 @@ class TaskAdapter(
 
 class TaskViewHolder(val binding: ItemTaskBinding) : RecyclerView.ViewHolder(binding.root) {
 
+    lateinit var task: Task
+
     fun render(task: Task) {
+        this.task = task
         binding.titleTextView.text = task.title
         binding.doneCheckBox.isChecked = task.done
         //binding.doneCheckBox.isEnabled = !task.done
