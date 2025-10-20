@@ -2,7 +2,9 @@ package com.example.todolist_android.adapters
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
+import com.example.todolist_android.adapters.utils.TaskDiffUtil
 import com.example.todolist_android.data.Task
 import com.example.todolist_android.databinding.ItemTaskBinding
 
@@ -25,15 +27,15 @@ class TaskAdapter(
         val item = items[position]
         holder.render(item)
         holder.itemView.setOnClickListener {
-            onClickListener(position)
+            onClickListener(holder.bindingAdapterPosition)
         }
         holder.binding.doneCheckBox.setOnCheckedChangeListener { _, _ ->
             if(holder.binding.doneCheckBox.isPressed) {
-                onCheckListener(position)
+                onCheckListener(holder.bindingAdapterPosition)
             }
         }
         holder.binding.deleteButton.setOnClickListener {
-            onDeleteListener(position)
+            onDeleteListener(holder.bindingAdapterPosition)
         }
     }
 
@@ -43,8 +45,10 @@ class TaskAdapter(
     }
 
     fun updateItems(items: List<Task>) {
+        val diffUtil = TaskDiffUtil(this.items, items)
+        val diffResult = DiffUtil.calculateDiff(diffUtil)
         this.items = items
-        notifyDataSetChanged()
+        diffResult.dispatchUpdatesTo(this)
     }
 }
 
